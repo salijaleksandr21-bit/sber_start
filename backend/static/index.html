@@ -1,88 +1,486 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Сбер.Старт - Оценка бизнес-идеи</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Сбер.Старт – Анализ бизнес-идей</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .sber-gradient {
-            background: linear-gradient(135deg, #21a038 0%, #00e074 100%);
+        :root {
+            /* Фирменная палитра Сбера */
+            --sber-primary: #21A038;
+            --sber-light: #0AF173;
+            --sber-gradient: linear-gradient(135deg, #21A038 0%, #0AF173 100%);
+            --sber-dark: #12151A;
+            --sber-gray-text: #6B7A8B;
+            --sber-bg: #F4F7F9;
+            --sber-card-bg: #FFFFFF;
+            --sber-danger: #F43F5E;
+            --sber-warning: #F59E0B;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--sber-bg);
+            color: var(--sber-dark);
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            max-width: 860px;
+            width: 100%;
+            background: var(--sber-card-bg);
+            border-radius: 32px;
+            box-shadow: 0 24px 48px -12px rgba(18, 21, 26, 0.08);
+            padding: 40px;
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .logo-circle {
+            width: 36px;
+            height: 36px;
+            background: var(--sber-gradient);
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(33, 160, 56, 0.3);
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: var(--sber-gray-text);
+            font-size: 16px;
+            font-weight: 400;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 20px;
+            font-size: 16px;
+            border: 2px solid transparent;
+            border-radius: 20px;
+            resize: vertical;
+            min-height: 140px;
+            font-family: inherit;
+            background: #F9FAFB;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            color: var(--sber-dark);
+            line-height: 1.6;
+        }
+
+        textarea:focus {
+            outline: none;
+            background: var(--sber-card-bg);
+            border-color: rgba(33, 160, 56, 0.4);
+            box-shadow: 0 0 0 4px rgba(33, 160, 56, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        button {
+            padding: 16px 32px;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        #analyzeBtn {
+            background: var(--sber-gradient);
+            color: white;
+            flex: 1;
+            box-shadow: 0 8px 20px rgba(33, 160, 56, 0.25);
+        }
+
+        #analyzeBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(33, 160, 56, 0.35);
+        }
+
+        #analyzeBtn:active {
+            transform: translateY(0);
+        }
+
+        #analyzeBtn:disabled {
+            background: #D1D5DB;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #clearBtn {
+            background: #F3F4F6;
+            color: var(--sber-gray-text);
+        }
+
+        #clearBtn:hover {
+            background: #E5E7EB;
+            color: var(--sber-dark);
+        }
+
+        /* Анимация загрузки */
+        #loader {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 0;
+            gap: 16px;
+            color: var(--sber-primary);
+            font-weight: 500;
+            animation: fadeIn 0.3s ease;
+        }
+
+        #loader.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(33, 160, 56, 0.1);
+            border-top-color: var(--sber-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Блок результатов */
+        #result {
+            margin-top: 40px;
+            display: none;
+            animation: slideUp 0.5s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        #result.show {
+            display: block;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #F3F4F6;
+        }
+
+        .result-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .badge {
+            background: rgba(33, 160, 56, 0.1);
+            color: var(--sber-primary);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: #F8FAFC;
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid #F1F5F9;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            background: #FFFFFF;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.04);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--sber-gray-text);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--sber-dark);
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+
+        .stat-value .unit {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--sber-gray-text);
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 18px;
+            margin: 32px 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title.risks { color: var(--sber-danger); }
+        .section-title.recs { color: var(--sber-primary); }
+
+        .chip-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chip {
+            background: #FFFFFF;
+            padding: 16px 20px;
+            border-radius: 16px;
+            font-size: 15px;
+            color: var(--sber-dark);
+            border: 1px solid #F1F5F9;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            line-height: 1.5;
+            position: relative;
+            padding-left: 48px;
+        }
+
+        .chip-risk::before {
+            content: '⚠️';
+            position: absolute;
+            left: 20px;
+            top: 16px;
+        }
+
+        .chip-rec::before {
+            content: '💡';
+            position: absolute;
+            left: 20px;
+            top: 16px;
+        }
+
+        .summary-box {
+            background: var(--sber-gradient);
+            border-radius: 24px;
+            padding: 24px 32px;
+            margin-top: 32px;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #FFFFFF;
+            box-shadow: 0 12px 24px rgba(33, 160, 56, 0.2);
+        }
+
+        .summary-box strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.9;
+        }
+
+        .error-box {
+            background: #FFF1F2;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 24px;
+            border: 1px solid #FFE4E6;
+            color: var(--sber-danger);
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        @media (max-width: 768px) {
+            .stat-grid { grid-template-columns: 1fr; gap: 16px; }
+            .container { padding: 24px; margin-top: 20px; border-radius: 24px; }
+            .button-group { flex-direction: column; }
+            #clearBtn { order: 2; }
+            #analyzeBtn { order: 1; width: 100%; }
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen font-sans text-gray-800">
+<body>
+<div class="container">
+    <div class="header-logo">
+        <div class="logo-circle"></div>
+        <h1>Сбер.Старт</h1>
+    </div>
+    <div class="subtitle">
+        Объективная AI-оценка бизнес-идеи на основе тысяч реальных сценариев.
+    </div>
 
-    <!-- Навигация -->
-    <nav class="bg-white shadow-sm p-4">
-        <div class="max-w-4xl mx-auto flex items-center">
-            <div class="w-8 h-8 rounded-full sber-gradient mr-3"></div>
-            <h1 class="text-xl font-bold text-gray-800">Сбер<span class="text-green-600">.Старт</span></h1>
+    <div class="input-group">
+        <textarea id="ideaInput" placeholder="Опишите вашу идею максимально подробно. Например: Хочу открыть кофейню формата to-go рядом с университетом для студентов..."></textarea>
+    </div>
+
+    <div class="button-group">
+        <button id="analyzeBtn">Проверить идею</button>
+        <button id="clearBtn">Очистить</button>
+    </div>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <span>Искусственный интеллект анализирует базу кейсов...</span>
+    </div>
+
+    <div id="result">
+        <div class="result-header">
+            <h2>Отчет об устойчивости бизнес-модели</h2>
+            <span class="badge" id="casesCount"></span>
         </div>
-    </nav>
-
-    <!-- Главный блок -->
-    <main class="max-w-4xl mx-auto p-6 mt-8">
-        <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
-            <h2 class="text-2xl font-bold mb-2">Проверь свою идею перед стартом</h2>
-            <p class="text-gray-500 mb-6">AI-анализ на основе тысяч реальных бизнес-кейсов.</p>
-            
-            <textarea id="ideaInput" rows="3" 
-                class="w-full border border-gray-300 rounded-xl p-4 focus:ring-2 focus:ring-green-500 focus:outline-none resize-none mb-4" 
-                placeholder="Например: Хочу открыть кофейню формата to-go рядом с университетом..."></textarea>
-            
-            <button id="analyzeBtn" onclick="analyzeIdea()" 
-                class="sber-gradient text-white font-bold py-3 px-8 rounded-xl hover:opacity-90 transition-opacity w-full sm:w-auto">
-                Оценить идею
-            </button>
-        </div>
-
-        <!-- Блок загрузки -->
-        <div id="loader" class="hidden text-center py-8">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-green-500 border-t-transparent"></div>
-            <p class="mt-2 text-gray-500">ИИ анализирует исторические данные...</p>
-        </div>
-
-        <!-- Блок результатов -->
-        <div id="results" class="hidden space-y-6">
-            <div class="bg-white rounded-2xl shadow-lg p-8 border-l-4 border-green-500">
-                <h3 class="text-lg font-bold mb-4">Резюме от ИИ-помощника</h3>
-                <p id="resSummary" class="text-gray-700 leading-relaxed"></p>
-                <div class="mt-4 flex gap-4 text-sm font-semibold">
-                    <div class="bg-green-50 text-green-700 px-4 py-2 rounded-lg">Выживаемость: <span id="resSurvival"></span>%</div>
-                    <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg">Найдено аналогов: <span id="resCases"></span></div>
-                </div>
+        
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-label">Определенная ниша</div>
+                <div class="stat-value" id="nicheValue">—</div>
             </div>
-
-            <div class="grid md:grid-cols-2 gap-6">
-                <!-- Риски -->
-                <div class="bg-white rounded-2xl shadow-lg p-8">
-                    <h3 class="text-lg font-bold text-red-600 mb-4 flex items-center">
-                        ⚠️ Ключевые риски
-                    </h3>
-                    <ul id="resRisks" class="space-y-3 text-gray-700 list-disc list-inside"></ul>
-                </div>
-
-                <!-- Рекомендации -->
-                <div class="bg-white rounded-2xl shadow-lg p-8">
-                    <h3 class="text-lg font-bold text-green-600 mb-4 flex items-center">
-                        💡 План действий
-                    </h3>
-                    <ul id="resRecs" class="space-y-3 text-gray-700 list-disc list-inside"></ul>
-                </div>
+            <div class="stat-card">
+                <div class="stat-label">Прогноз выживаемости (1 год)</div>
+                <div class="stat-value"><span id="survivalValue">—</span><span class="unit">%</span></div>
             </div>
         </div>
-    </main>
 
-    <script>
-        async function analyzeIdea() {
-            const idea = document.getElementById('ideaInput').value.trim();
-            if (!idea) return alert('Пожалуйста, опишите вашу идею');
+        <div class="section-title risks">Ключевые факторы риска</div>
+        <div class="chip-list" id="risksList"></div>
 
-            // Управление UI
-            document.getElementById('results').classList.add('hidden');
-            document.getElementById('loader').classList.remove('hidden');
-            document.getElementById('analyzeBtn').disabled = true;
+        <div class="section-title recs">Рекомендуемые действия до старта</div>
+        <div class="chip-list" id="recommendationsList"></div>
+
+        <div class="summary-box">
+            <strong>Резюме инвестиционного ИИ-комитета</strong>
+            <span id="summaryText"></span>
+        </div>
+        
+        <div id="errorContainer" style="display:none;" class="error-box"></div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const ideaInput = document.getElementById('ideaInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const loader = document.getElementById('loader');
+        const resultDiv = document.getElementById('result');
+        const errorContainer = document.getElementById('errorContainer');
+
+        const nicheValue = document.getElementById('nicheValue');
+        const survivalValue = document.getElementById('survivalValue');
+        const casesCount = document.getElementById('casesCount');
+        const risksList = document.getElementById('risksList');
+        const recommendationsList = document.getElementById('recommendationsList');
+        const summaryText = document.getElementById('summaryText');
+
+        function showLoader(show) {
+            loader.classList.toggle('show', show);
+            analyzeBtn.disabled = show;
+        }
+
+        function clearResult() {
+            resultDiv.classList.remove('show');
+            errorContainer.style.display = 'none';
+        }
+
+        function displayResult(data) {
+            clearResult();
+            
+            // Заставляем браузер перезапустить анимацию slideUp
+            resultDiv.style.animation = 'none';
+            resultDiv.offsetHeight; 
+            resultDiv.style.animation = null;
+
+            nicheValue.textContent = data.niche || 'неизвестно';
+            survivalValue.textContent = (data.survival_probability || 0).toFixed(1);
+            casesCount.textContent = `База: ${data.similar_cases_count || 0} кейсов`;
+
+            risksList.innerHTML = '';
+            (data.key_risks || []).forEach(risk => {
+                const chip = document.createElement('div');
+                chip.className = 'chip chip-risk';
+                chip.textContent = risk;
+                risksList.appendChild(chip);
+            });
+
+            recommendationsList.innerHTML = '';
+            (data.recommendations || []).forEach(rec => {
+                const chip = document.createElement('div');
+                chip.className = 'chip chip-rec';
+                chip.textContent = rec;
+                recommendationsList.appendChild(chip);
+            });
+
+            summaryText.textContent = data.summary || 'Нет резюме';
+            resultDiv.classList.add('show');
+        }
+
+        function showError(message) {
+            clearResult();
+            errorContainer.textContent = message || 'Произошла ошибка при анализе. Попробуйте позже.';
+            errorContainer.style.display = 'block';
+            resultDiv.classList.add('show');
+        }
+
+        async function analyze() {
+            const idea = ideaInput.value.trim();
+            if (!idea) {
+                alert('Пожалуйста, опишите вашу бизнес-идею.');
+                return;
+            }
+
+            showLoader(true);
+            clearResult();
 
             try {
                 const response = await fetch('/api/v1/analyze', {
@@ -91,28 +489,38 @@
                     body: JSON.stringify({ idea_text: idea })
                 });
 
-                if (!response.ok) throw new Error('Ошибка сервера');
-                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Сервер ответил с ошибкой (${response.status}): ${errorText}`);
+                }
+
                 const data = await response.json();
-
-                // Заполнение данных
-                document.getElementById('resSummary').textContent = data.summary;
-                document.getElementById('resSurvival').textContent = data.survival_probability.toFixed(0);
-                document.getElementById('resCases').textContent = data.similar_cases_count;
-                
-                document.getElementById('resRisks').innerHTML = data.key_risks.map(r => `<li>${r}</li>`).join('');
-                document.getElementById('resRecs').innerHTML = data.recommendations.map(r => `<li>${r}</li>`).join('');
-
-                // Показ результатов
-                document.getElementById('loader').classList.add('hidden');
-                document.getElementById('results').classList.remove('hidden');
-            } catch (error) {
-                alert('Произошла ошибка при анализе. Проверьте консоль сервера.');
-                document.getElementById('loader').classList.add('hidden');
+                displayResult(data);
+            } catch (err) {
+                console.error('Ошибка запроса:', err);
+                showError('Не удалось подключиться к серверу аналитики.');
             } finally {
-                document.getElementById('analyzeBtn').disabled = false;
+                showLoader(false);
             }
         }
-    </script>
+
+        analyzeBtn.addEventListener('click', analyze);
+
+        clearBtn.addEventListener('click', function() {
+            ideaInput.value = '';
+            clearResult();
+            errorContainer.style.display = 'none';
+        });
+
+        ideaInput.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                analyze();
+            }
+        });
+    })();
+</script>
 </body>
 </html>
+
+```
