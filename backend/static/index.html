@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сбер.Старт - Оценка бизнес-идеи</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .sber-gradient {
+            background: linear-gradient(135deg, #21a038 0%, #00e074 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans text-gray-800">
+
+    <!-- Навигация -->
+    <nav class="bg-white shadow-sm p-4">
+        <div class="max-w-4xl mx-auto flex items-center">
+            <div class="w-8 h-8 rounded-full sber-gradient mr-3"></div>
+            <h1 class="text-xl font-bold text-gray-800">Сбер<span class="text-green-600">.Старт</span></h1>
+        </div>
+    </nav>
+
+    <!-- Главный блок -->
+    <main class="max-w-4xl mx-auto p-6 mt-8">
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+            <h2 class="text-2xl font-bold mb-2">Проверь свою идею перед стартом</h2>
+            <p class="text-gray-500 mb-6">AI-анализ на основе тысяч реальных бизнес-кейсов.</p>
+            
+            <textarea id="ideaInput" rows="3" 
+                class="w-full border border-gray-300 rounded-xl p-4 focus:ring-2 focus:ring-green-500 focus:outline-none resize-none mb-4" 
+                placeholder="Например: Хочу открыть кофейню формата to-go рядом с университетом..."></textarea>
+            
+            <button id="analyzeBtn" onclick="analyzeIdea()" 
+                class="sber-gradient text-white font-bold py-3 px-8 rounded-xl hover:opacity-90 transition-opacity w-full sm:w-auto">
+                Оценить идею
+            </button>
+        </div>
+
+        <!-- Блок загрузки -->
+        <div id="loader" class="hidden text-center py-8">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-green-500 border-t-transparent"></div>
+            <p class="mt-2 text-gray-500">ИИ анализирует исторические данные...</p>
+        </div>
+
+        <!-- Блок результатов -->
+        <div id="results" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-lg p-8 border-l-4 border-green-500">
+                <h3 class="text-lg font-bold mb-4">Резюме от ИИ-помощника</h3>
+                <p id="resSummary" class="text-gray-700 leading-relaxed"></p>
+                <div class="mt-4 flex gap-4 text-sm font-semibold">
+                    <div class="bg-green-50 text-green-700 px-4 py-2 rounded-lg">Выживаемость: <span id="resSurvival"></span>%</div>
+                    <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg">Найдено аналогов: <span id="resCases"></span></div>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Риски -->
+                <div class="bg-white rounded-2xl shadow-lg p-8">
+                    <h3 class="text-lg font-bold text-red-600 mb-4 flex items-center">
+                        ⚠️ Ключевые риски
+                    </h3>
+                    <ul id="resRisks" class="space-y-3 text-gray-700 list-disc list-inside"></ul>
+                </div>
+
+                <!-- Рекомендации -->
+                <div class="bg-white rounded-2xl shadow-lg p-8">
+                    <h3 class="text-lg font-bold text-green-600 mb-4 flex items-center">
+                        💡 План действий
+                    </h3>
+                    <ul id="resRecs" class="space-y-3 text-gray-700 list-disc list-inside"></ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function analyzeIdea() {
+            const idea = document.getElementById('ideaInput').value.trim();
+            if (!idea) return alert('Пожалуйста, опишите вашу идею');
+
+            // Управление UI
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('loader').classList.remove('hidden');
+            document.getElementById('analyzeBtn').disabled = true;
+
+            try {
+                const response = await fetch('/api/v1/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ idea_text: idea })
+                });
+
+                if (!response.ok) throw new Error('Ошибка сервера');
+                
+                const data = await response.json();
+
+                // Заполнение данных
+                document.getElementById('resSummary').textContent = data.summary;
+                document.getElementById('resSurvival').textContent = data.survival_probability.toFixed(0);
+                document.getElementById('resCases').textContent = data.similar_cases_count;
+                
+                document.getElementById('resRisks').innerHTML = data.key_risks.map(r => `<li>${r}</li>`).join('');
+                document.getElementById('resRecs').innerHTML = data.recommendations.map(r => `<li>${r}</li>`).join('');
+
+                // Показ результатов
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('results').classList.remove('hidden');
+            } catch (error) {
+                alert('Произошла ошибка при анализе. Проверьте консоль сервера.');
+                document.getElementById('loader').classList.add('hidden');
+            } finally {
+                document.getElementById('analyzeBtn').disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
